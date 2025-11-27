@@ -20,7 +20,7 @@ class StorageService {
     return list.map((e) => Note.fromJson(e)).toList();
   }
 
-  static Future<void> saveNote(String text) async {
+  static Future<void> saveNote(String text, {String? imagePath}) async {
     final prefs = await SharedPreferences.getInstance();
     final notes = await getNotes();
 
@@ -29,6 +29,7 @@ class StorageService {
       title: text.split('\n').first.trim(), // First line as title
       text: text,
       timestamp: DateTime.now().toString(),
+      imagePath: imagePath,
     );
 
     notes.add(newNote);

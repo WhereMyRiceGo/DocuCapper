@@ -16,17 +16,22 @@ class ImagePreviewScreen extends StatelessWidget {
           Expanded(child: Center(child: Image.file(File(imagePath)))),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => OcrScreen(imagePath: imagePath),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.text_fields),
-              label: const Text("Extract Text"),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OcrScreen(imagePath: imagePath),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.text_fields),
+                  label: const Text("Extract Text"),
+                ),
+              ),
             ),
           ),
         ],

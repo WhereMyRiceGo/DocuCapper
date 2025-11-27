@@ -1,4 +1,4 @@
-package com.example.docucapper
+package com.docucapper.docucapper
 
 import io.flutter.embedding.android.FlutterActivity
 

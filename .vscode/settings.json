@@ -1,4 +1,5 @@
 {
     "CodeGPT.apiKey": "OpenAI",
-    "terminal.integrated.cwd": "G:\\DocuCapper"
+    "terminal.integrated.cwd": "G:\\DocuCapper",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
