@@ -20,6 +20,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   bool _isEditing = false;
   bool _showImage = false;
   ui.Image? _loadedImage;
+  double _splitRatio = 0.6; // 60% for image, 40% for text by default
 
   @override
   void initState() {
@@ -151,36 +152,62 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: _showImage && note.imagePath != null && _loadedImage != null
-            ? Column(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Card(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.file(
-                          File(note.imagePath!),
-                          fit: BoxFit.contain,
+            ? LayoutBuilder(
+                builder: (context, constraints) {
+                  return Column(
+                    children: [
+                      SizedBox(
+                        height: constraints.maxHeight * _splitRatio,
+                        child: Card(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              File(note.imagePath!),
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    flex: 1,
-                    child: _isEditing
-                        ? TextField(
-                            controller: _textController,
-                            maxLines: null,
-                            expands: true,
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'Note content',
+                      GestureDetector(
+                        onVerticalDragUpdate: (details) {
+                          setState(() {
+                            _splitRatio +=
+                                details.delta.dy / constraints.maxHeight;
+                            _splitRatio = _splitRatio.clamp(0.2, 0.8);
+                          });
+                        },
+                        child: Container(
+                          height: 12,
+                          color: Colors.transparent,
+                          child: Center(
+                            child: Container(
+                              height: 4,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
-                          )
-                        : SingleChildScrollView(child: Text(note.text)),
-                  ),
-                ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: constraints.maxHeight * (1 - _splitRatio) - 12,
+                        child: _isEditing
+                            ? TextField(
+                                controller: _textController,
+                                maxLines: null,
+                                expands: true,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: 'Note content',
+                                ),
+                              )
+                            : SingleChildScrollView(child: Text(note.text)),
+                      ),
+                    ],
+                  );
+                },
               )
             : (_isEditing
                   ? TextField(

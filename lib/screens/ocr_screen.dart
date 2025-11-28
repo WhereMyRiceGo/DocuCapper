@@ -25,6 +25,7 @@ class _OcrScreenState extends State<OcrScreen> {
   double _averageConfidence = 0.0;
   int? _selectedLineIndex;
   ui.Image? _loadedImage;
+  double _splitRatio = 0.6; // 60% for image, 40% for text by default
 
   @override
   void initState() {
@@ -255,41 +256,71 @@ class _OcrScreenState extends State<OcrScreen> {
             ),
           Expanded(
             child: _showImage
-                ? Column(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Card(
-                          margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: _buildImageWithHighlight(),
+                ? LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Column(
+                        children: [
+                          SizedBox(
+                            height: constraints.maxHeight * _splitRatio,
+                            child: Card(
+                              margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: _buildImageWithHighlight(),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Card(
-                          margin: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-                          child: _isEditing
-                              ? TextField(
-                                  controller: _textController,
-                                  maxLines: null,
-                                  expands: true,
-                                  style: const TextStyle(fontSize: 14),
-                                  decoration: const InputDecoration(
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.all(12),
-                                    hintText: 'Edit extracted text...',
+                          GestureDetector(
+                            onVerticalDragUpdate: (details) {
+                              setState(() {
+                                _splitRatio +=
+                                    details.delta.dy / constraints.maxHeight;
+                                _splitRatio = _splitRatio.clamp(0.2, 0.8);
+                              });
+                            },
+                            child: Container(
+                              height: 12,
+                              color: Colors.transparent,
+                              child: Center(
+                                child: Container(
+                                  height: 4,
+                                  width: 40,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(2),
                                   ),
-                                )
-                              : SingleChildScrollView(
-                                  padding: const EdgeInsets.all(12),
-                                  child: _buildHighlightedText(),
                                 ),
-                        ),
-                      ),
-                    ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height:
+                                constraints.maxHeight * (1 - _splitRatio) - 12,
+                            child: Card(
+                              margin: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+                              child: _isEditing
+                                  ? TextField(
+                                      controller: _textController,
+                                      maxLines: null,
+                                      expands: true,
+                                      style: const TextStyle(fontSize: 14),
+                                      decoration: const InputDecoration(
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.all(12),
+                                        hintText: 'Edit extracted text...',
+                                      ),
+                                    )
+                                  : SingleChildScrollView(
+                                      padding: const EdgeInsets.all(12),
+                                      child: _buildHighlightedText(),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   )
                 : Card(
                     margin: const EdgeInsets.all(12),
