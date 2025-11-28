@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/scan_history_item.dart';
 import '../services/storage_service.dart';
+import 'ocr_screen.dart';
 
 class HistoryPreviewScreen extends StatelessWidget {
   final ScanHistoryItem item;
@@ -60,6 +61,19 @@ class HistoryPreviewScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                 ],
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OcrScreen(imagePath: item.imagePath),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.text_fields),
+                  label: const Text('Extract Text'),
+                ),
+                const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () => _confirmDelete(context),
                   icon: const Icon(Icons.delete, color: Colors.red),

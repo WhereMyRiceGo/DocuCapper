@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:share_plus/share_plus.dart';
@@ -26,6 +27,8 @@ class _OcrScreenState extends State<OcrScreen> {
   int? _selectedLineIndex;
   ui.Image? _loadedImage;
   double _splitRatio = 0.6; // 60% for image, 40% for text by default
+  final TransformationController _transformationController =
+      TransformationController();
 
   @override
   void initState() {
@@ -38,6 +41,7 @@ class _OcrScreenState extends State<OcrScreen> {
   void dispose() {
     _textController?.dispose();
     _loadedImage?.dispose();
+    _transformationController.dispose();
     super.dispose();
   }
 
@@ -165,18 +169,66 @@ class _OcrScreenState extends State<OcrScreen> {
     );
   }
 
+  void _handleImageTap(Offset position, double currentScale) {
+    if (_loadedImage == null || _textBlocks.isEmpty) return;
+
+    int lineIndex = 0;
+    for (final block in _textBlocks) {
+      for (final line in block.lines) {
+        final rect = line.boundingBox;
+
+        // Check if tap is within this line's bounding box
+        if (rect.contains(Offset(position.dx, position.dy))) {
+          setState(() {
+            _selectedLineIndex = _selectedLineIndex == lineIndex
+                ? null
+                : lineIndex;
+          });
+          return;
+        }
+        lineIndex++;
+      }
+    }
+
+    // If no line was tapped, clear selection
+    setState(() {
+      _selectedLineIndex = null;
+    });
+  }
+
   Widget _buildImageWithHighlight() {
     if (_loadedImage == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return CustomPaint(
-      painter: _ImageHighlightPainter(
-        image: _loadedImage!,
-        textBlocks: _textBlocks,
-        selectedLineIndex: _selectedLineIndex,
+    return InteractiveViewer(
+      transformationController: _transformationController,
+      minScale: 0.5,
+      maxScale: 4.0,
+      child: GestureDetector(
+        onTapUp: (details) {
+          // Get the current transformation matrix
+          final matrix = _transformationController.value;
+          final scale = matrix.getMaxScaleOnAxis();
+
+          // Transform tap position to image coordinates
+          final localPos = details.localPosition;
+          final transformedPos = MatrixUtils.transformPoint(
+            Matrix4.inverted(matrix),
+            localPos,
+          );
+
+          _handleImageTap(transformedPos, scale);
+        },
+        child: CustomPaint(
+          painter: _ImageHighlightPainter(
+            image: _loadedImage!,
+            textBlocks: _textBlocks,
+            selectedLineIndex: _selectedLineIndex,
+          ),
+          child: Container(),
+        ),
       ),
-      child: Container(),
     );
   }
 

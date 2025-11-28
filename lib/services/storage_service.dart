@@ -24,11 +24,15 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     final notes = await getNotes();
 
+    final now = DateTime.now();
+    final title =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
     final newNote = Note(
       id: uuid.v4(),
-      title: text.split('\n').first.trim(), // First line as title
+      title: title,
       text: text,
-      timestamp: DateTime.now().toString(),
+      timestamp: now.toString(),
       imagePath: imagePath,
     );
 
