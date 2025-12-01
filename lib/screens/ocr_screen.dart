@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:share_plus/share_plus.dart';
@@ -284,186 +283,204 @@ class _OcrScreenState extends State<OcrScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          if (_showConfidence &&
-              _averageConfidence > 0 &&
-              _averageConfidence < 0.7)
-            Container(
-              width: double.infinity,
-              color: Colors.orange.withOpacity(0.2),
-              padding: const EdgeInsets.all(8),
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (_showConfidence &&
+                _averageConfidence > 0 &&
+                _averageConfidence < 0.7)
+              Container(
+                width: double.infinity,
+                color: Colors.orange.withOpacity(0.2),
+                padding: const EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange[800], size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Low confidence detected. Please review and edit the text.',
+                        style: TextStyle(
+                          color: Colors.orange[800],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: _showImage
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Column(
+                          children: [
+                            SizedBox(
+                              height: constraints.maxHeight * _splitRatio,
+                              child: Card(
+                                margin: const EdgeInsets.fromLTRB(
+                                  12,
+                                  12,
+                                  12,
+                                  6,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: _buildImageWithHighlight(),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onVerticalDragUpdate: (details) {
+                                setState(() {
+                                  _splitRatio +=
+                                      details.delta.dy / constraints.maxHeight;
+                                  _splitRatio = _splitRatio.clamp(0.2, 0.8);
+                                });
+                              },
+                              child: Container(
+                                height: 12,
+                                color: Colors.transparent,
+                                child: Center(
+                                  child: Container(
+                                    height: 4,
+                                    width: 40,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height:
+                                  constraints.maxHeight * (1 - _splitRatio) -
+                                  12,
+                              child: Card(
+                                margin: const EdgeInsets.fromLTRB(
+                                  12,
+                                  6,
+                                  12,
+                                  12,
+                                ),
+                                child: _isEditing
+                                    ? TextField(
+                                        controller: _textController,
+                                        maxLines: null,
+                                        expands: true,
+                                        style: const TextStyle(fontSize: 14),
+                                        decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.all(12),
+                                          hintText: 'Edit extracted text...',
+                                        ),
+                                      )
+                                    : SingleChildScrollView(
+                                        padding: const EdgeInsets.all(12),
+                                        child: _buildHighlightedText(),
+                                      ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    )
+                  : Card(
+                      margin: const EdgeInsets.all(12),
+                      child: _isEditing
+                          ? TextField(
+                              controller: _textController,
+                              maxLines: null,
+                              expands: true,
+                              style: const TextStyle(fontSize: 14),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.all(12),
+                                hintText: 'Edit extracted text...',
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              padding: const EdgeInsets.all(12),
+                              child: _buildHighlightedText(),
+                            ),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange[800], size: 20),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final textToCopy = _isEditing
+                            ? (_textController?.text ?? extractedText)
+                            : extractedText;
+
+                        await Clipboard.setData(
+                          ClipboardData(text: textToCopy),
+                        );
+
+                        if (!context.mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Copied to clipboard'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy),
+                      label: const Text("Copy"),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      'Low confidence detected. Please review and edit the text.',
-                      style: TextStyle(color: Colors.orange[800], fontSize: 12),
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final textToShare = _isEditing
+                            ? (_textController?.text ?? extractedText)
+                            : extractedText;
+
+                        await Share.share(textToShare);
+                      },
+                      icon: const Icon(Icons.share),
+                      label: const Text("Share"),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final textToSave = _isEditing
+                            ? (_textController?.text ?? extractedText)
+                            : extractedText;
+
+                        await StorageService.saveNote(
+                          textToSave,
+                          imagePath: widget.imagePath,
+                        );
+
+                        if (!context.mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Saved as note'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.save),
+                      label: const Text("Save"),
                     ),
                   ),
                 ],
               ),
             ),
-          Expanded(
-            child: _showImage
-                ? LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Column(
-                        children: [
-                          SizedBox(
-                            height: constraints.maxHeight * _splitRatio,
-                            child: Card(
-                              margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: _buildImageWithHighlight(),
-                              ),
-                            ),
-                          ),
-                          GestureDetector(
-                            onVerticalDragUpdate: (details) {
-                              setState(() {
-                                _splitRatio +=
-                                    details.delta.dy / constraints.maxHeight;
-                                _splitRatio = _splitRatio.clamp(0.2, 0.8);
-                              });
-                            },
-                            child: Container(
-                              height: 12,
-                              color: Colors.transparent,
-                              child: Center(
-                                child: Container(
-                                  height: 4,
-                                  width: 40,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height:
-                                constraints.maxHeight * (1 - _splitRatio) - 12,
-                            child: Card(
-                              margin: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-                              child: _isEditing
-                                  ? TextField(
-                                      controller: _textController,
-                                      maxLines: null,
-                                      expands: true,
-                                      style: const TextStyle(fontSize: 14),
-                                      decoration: const InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.all(12),
-                                        hintText: 'Edit extracted text...',
-                                      ),
-                                    )
-                                  : SingleChildScrollView(
-                                      padding: const EdgeInsets.all(12),
-                                      child: _buildHighlightedText(),
-                                    ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  )
-                : Card(
-                    margin: const EdgeInsets.all(12),
-                    child: _isEditing
-                        ? TextField(
-                            controller: _textController,
-                            maxLines: null,
-                            expands: true,
-                            style: const TextStyle(fontSize: 14),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.all(12),
-                              hintText: 'Edit extracted text...',
-                            ),
-                          )
-                        : SingleChildScrollView(
-                            padding: const EdgeInsets.all(12),
-                            child: _buildHighlightedText(),
-                          ),
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final textToCopy = _isEditing
-                          ? (_textController?.text ?? extractedText)
-                          : extractedText;
-
-                      await Clipboard.setData(ClipboardData(text: textToCopy));
-
-                      if (!context.mounted) return;
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Copied to clipboard'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.copy),
-                    label: const Text("Copy"),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final textToShare = _isEditing
-                          ? (_textController?.text ?? extractedText)
-                          : extractedText;
-
-                      await Share.share(textToShare);
-                    },
-                    icon: const Icon(Icons.share),
-                    label: const Text("Share"),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final textToSave = _isEditing
-                          ? (_textController?.text ?? extractedText)
-                          : extractedText;
-
-                      await StorageService.saveNote(
-                        textToSave,
-                        imagePath: widget.imagePath,
-                      );
-
-                      if (!context.mounted) return;
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Saved as note'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.save),
-                    label: const Text("Save"),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

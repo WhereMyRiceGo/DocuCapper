@@ -14,7 +14,7 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   List<ScanHistoryItem> items = [];
   bool _isSelecting = false;
-  Set<String> _selectedIds = {};
+  final Set<String> _selectedIds = {};
 
   @override
   void initState() {
@@ -182,101 +182,105 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ],
         ],
       ),
-      body: items.isEmpty
-          ? const Center(child: Text('No scan history'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final isSelected = _selectedIds.contains(item.id);
+      body: SafeArea(
+        child: items.isEmpty
+            ? const Center(child: Text('No scan history'))
+            : ListView.builder(
+                padding: const EdgeInsets.all(8),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  final isSelected = _selectedIds.contains(item.id);
 
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  child: ListTile(
-                    leading: _isSelecting
-                        ? Checkbox(
-                            value: isSelected,
-                            onChanged: (_) => _toggleSelection(item.id),
-                          )
-                        : Image.file(
-                            File(item.imagePath),
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          ),
-                    title: Text(
-                      item.extractedText.length > 30
-                          ? "${item.extractedText.substring(0, 30)}..."
-                          : item.extractedText,
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                    onTap: _isSelecting
-                        ? () => _toggleSelection(item.id)
-                        : () async {
-                            final result = await Navigator.push<bool?>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    HistoryPreviewScreen(item: item),
-                              ),
-                            );
-
-                            if (result == true) {
-                              await loadHistory();
-                            }
-                          },
-                    trailing: _isSelecting
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () async {
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Delete Scan?'),
-                                  content: const Text(
-                                    'Are you sure you want to delete this scan?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
+                    child: ListTile(
+                      leading: _isSelecting
+                          ? Checkbox(
+                              value: isSelected,
+                              onChanged: (_) => _toggleSelection(item.id),
+                            )
+                          : Image.file(
+                              File(item.imagePath),
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            ),
+                      title: Text(
+                        item.extractedText.length > 30
+                            ? "${item.extractedText.substring(0, 30)}..."
+                            : item.extractedText,
+                      ),
+                      onTap: _isSelecting
+                          ? () => _toggleSelection(item.id)
+                          : () async {
+                              final result = await Navigator.push<bool?>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      HistoryPreviewScreen(item: item),
                                 ),
                               );
 
-                              if (confirmed == true) {
-                                await StorageService.deleteHistoryItem(item.id);
+                              if (result == true) {
                                 await loadHistory();
-
-                                if (!context.mounted) return;
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Scan deleted'),
-                                    duration: Duration(seconds: 1),
-                                  ),
-                                );
                               }
                             },
-                          ),
-                  ),
-                );
-              },
-            ),
+                      trailing: _isSelecting
+                          ? null
+                          : IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Delete Scan?'),
+                                    content: const Text(
+                                      'Are you sure you want to delete this scan?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: const Text(
+                                          'Delete',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (confirmed == true) {
+                                  await StorageService.deleteHistoryItem(
+                                    item.id,
+                                  );
+                                  await loadHistory();
+
+                                  if (!context.mounted) return;
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Scan deleted'),
+                                      duration: Duration(seconds: 1),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                    ),
+                  );
+                },
+              ),
+      ),
     );
   }
 }

@@ -29,9 +29,11 @@ class _SummaryScreenState extends State<SummaryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Summary")),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: SingleChildScrollView(child: Text(summary)),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: SingleChildScrollView(child: Text(summary)),
+        ),
       ),
     );
   }

@@ -16,7 +16,7 @@ class _NotesScreenState extends State<NotesScreen> {
   String query = '';
   bool sortDescending = true;
   bool _isSelecting = false;
-  Set<String> _selectedIds = {};
+  final Set<String> _selectedIds = {};
   final TextEditingController _searchController = TextEditingController();
 
   @override
