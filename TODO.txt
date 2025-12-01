@@ -1,7 +1,0 @@
-Allow selection of specific area in photo to extract text. 
-
-
-To resync pictures:
-PS G:\AndroidStudioSDKs\platform-tools> .\adb.exe shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/
-Broadcasting: Intent { act=android.intent.action.MEDIA_SCANNER_SCAN_FILE dat=file:///... flg=0x400000 }
-Broadcast completed: result=0
