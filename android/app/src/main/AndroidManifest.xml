@@ -1,6 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Camera and storage permissions for image capture -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <!-- Android 13+ photo picker permissions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    
     <application
-        android:label="docucapper"
+        android:label="DocuCapper"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

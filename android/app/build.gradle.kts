@@ -65,8 +65,8 @@ android {
             // Disable code shrinking/minification for now to avoid R8 errors
             // related to ML Kit optional language modules. You can re-enable
             // minification once ProGuard/R8 rules are adjusted.
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
     }
 }
