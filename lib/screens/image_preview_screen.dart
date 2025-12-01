@@ -11,14 +11,14 @@ class ImagePreviewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Preview Image")),
-      body: Column(
-        children: [
-          Expanded(child: Center(child: Image.file(File(imagePath)))),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(child: Center(child: Image.file(File(imagePath)))),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.push(
@@ -33,8 +33,8 @@ class ImagePreviewScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

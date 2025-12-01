@@ -55,40 +55,48 @@ class _OcrScreenState extends State<OcrScreen> {
   }
 
   Future<void> runOcr() async {
-    // Use script detection for better handwriting recognition
-    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
-    final inputImage = InputImage.fromFilePath(widget.imagePath);
+    try {
+      // Use script detection for better handwriting recognition
+      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      final inputImage = InputImage.fromFilePath(widget.imagePath);
 
-    final recognizedText = await recognizer.processImage(inputImage);
+      final recognizedText = await recognizer.processImage(inputImage);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    // Calculate average confidence from lines (blocks don't have confidence in ML Kit)
-    double totalConfidence = 0.0;
-    int lineCount = 0;
+      // Calculate average confidence from lines (blocks don't have confidence in ML Kit)
+      double totalConfidence = 0.0;
+      int lineCount = 0;
 
-    for (final block in recognizedText.blocks) {
-      for (final line in block.lines) {
-        // Estimate confidence based on number of recognized elements
-        // This is a workaround since ML Kit doesn't expose confidence directly
-        totalConfidence += line.elements.isNotEmpty ? 0.85 : 0.5;
-        lineCount++;
+      for (final block in recognizedText.blocks) {
+        for (final line in block.lines) {
+          // Estimate confidence based on number of recognized elements
+          // This is a workaround since ML Kit doesn't expose confidence directly
+          totalConfidence += line.elements.isNotEmpty ? 0.85 : 0.5;
+          lineCount++;
+        }
       }
+
+      final avgConfidence = lineCount > 0 ? totalConfidence / lineCount : 0.0;
+
+      setState(() {
+        extractedText = recognizedText.text;
+        _textBlocks = recognizedText.blocks;
+        _averageConfidence = avgConfidence;
+        _textController = TextEditingController(text: extractedText);
+      });
+
+      // Automatically save to history (duplicates prevented by imagePath check)
+      await StorageService.addToHistory(widget.imagePath, recognizedText.text);
+
+      recognizer.close();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        extractedText = "Error processing image: $e";
+        _textController = TextEditingController(text: extractedText);
+      });
     }
-
-    final avgConfidence = lineCount > 0 ? totalConfidence / lineCount : 0.0;
-
-    setState(() {
-      extractedText = recognizedText.text;
-      _textBlocks = recognizedText.blocks;
-      _averageConfidence = avgConfidence;
-      _textController = TextEditingController(text: extractedText);
-    });
-
-    // Automatically save to history (duplicates prevented by imagePath check)
-    await StorageService.addToHistory(widget.imagePath, recognizedText.text);
-
-    recognizer.close();
   }
 
   void _toggleEdit() {

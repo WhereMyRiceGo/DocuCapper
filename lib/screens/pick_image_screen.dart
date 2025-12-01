@@ -85,22 +85,16 @@ class _PickImageScreenState extends State<PickImageScreen> {
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: pickImageFromGallery,
-                            icon: const Icon(Icons.photo),
-                            label: const Text("Choose from Gallery"),
-                          ),
+                        ElevatedButton.icon(
+                          onPressed: pickImageFromGallery,
+                          icon: const Icon(Icons.photo),
+                          label: const Text("Choose from Gallery"),
                         ),
                         const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: pickImageFromCamera,
-                            icon: const Icon(Icons.camera_alt),
-                            label: const Text("Use Camera"),
-                          ),
+                        ElevatedButton.icon(
+                          onPressed: pickImageFromCamera,
+                          icon: const Icon(Icons.camera_alt),
+                          label: const Text("Use Camera"),
                         ),
                       ],
                     ),
