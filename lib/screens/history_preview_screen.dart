@@ -39,53 +39,55 @@ class HistoryPreviewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Scan Preview')),
-      body: Column(
-        children: [
-          Expanded(child: Center(child: Image.file(File(item.imagePath)))),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (item.extractedText.isNotEmpty) ...[
-                  Text(
-                    'Existing extracted text:',
-                    style: Theme.of(context).textTheme.titleMedium,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(child: Center(child: Image.file(File(item.imagePath)))),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (item.extractedText.isNotEmpty) ...[
+                    Text(
+                      'Existing extracted text:',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 80,
+                      child: SingleChildScrollView(
+                        child: Text(item.extractedText),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => OcrScreen(imagePath: item.imagePath),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.text_fields),
+                    label: const Text('Extract Text'),
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    height: 80,
-                    child: SingleChildScrollView(
-                      child: Text(item.extractedText),
+                  OutlinedButton.icon(
+                    onPressed: () => _confirmDelete(context),
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    label: const Text(
+                      'Delete Scan',
+                      style: TextStyle(color: Colors.red),
                     ),
                   ),
-                  const SizedBox(height: 8),
                 ],
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => OcrScreen(imagePath: item.imagePath),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.text_fields),
-                  label: const Text('Extract Text'),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _confirmDelete(context),
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  label: const Text(
-                    'Delete Scan',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
